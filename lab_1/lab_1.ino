@@ -16,7 +16,9 @@ const float SLOPE = -0.000381880445;
 const int SATURATION_VOLTAGE = -6;  
 const float POS_TOLERANCE = 0.0005f; 
 
-float K_p = -200;
+const float STICTION = 0.3;
+
+float K_p = -15;
 
 // ================== Setup ==================
 void setup() {
@@ -27,20 +29,17 @@ void setup() {
   delay(300);
 
   geeWhizBegin();                 
-  // set_control_interval_ms(100);
+  set_control_interval_ms(10);
   setMotorVoltage(0.0f);
 
   Serial.println("geeWhiz Started");
   Serial.println("time, maxY, minY, ball, motor_raw, motor_rad");
 }
 
-// ================== Loop ==================
+// ================== Loop =================
 void loop() {
-  // Step input to measure overshoot and peak time
-  move_to_pos(-0.1);
-  delay(1000);
-  move_to_pos(0.1);
-  delay(1000);
+  hold_pos(-0.1, 1000);
+  hold_pos( 0.1, 1000);
 }
 
 // Convert motor pos to radians using system characterization params
@@ -49,42 +48,25 @@ float get_motor_rad() {
   return (SLOPE * motor_pos_raw) + OFFSET;
 }
 
-void move_to_pos(float target_rad) {
-  float current_rad = get_linear_radians();
-  float error = target_rad - current_rad;
-
-  Serial.println("Time (us), current_rad, target_rad");
-  Serial.print("K_p: ");
-  Serial.println(K_p);
-
-  while (fabs(error) > POS_TOLERANCE) {
-    current_rad = get_linear_radians();
-    error = target_rad - current_rad;
-
-    float voltage = K_p * error;
-
-    float max_volts = fabs((float)SATURATION_VOLTAGE);
-    voltage = constrain(voltage, -max_volts, max_volts);
-
-    setMotorVoltage(voltage);
-
-    Serial.print(micros());
-    Serial.print(", ");
-    Serial.print(current_rad, 4);
-    Serial.print(", ");
-    Serial.println(target_rad, 4);
-
-    delayMicroseconds(50);
-  }
-
-  setMotorVoltage(0.0f);
-  Serial.println("Pos achieved");
-}
 
 float get_linear_radians() {
     int raw = analogRead(MOT_PIN);
     return (SLOPE * raw) + OFFSET;
 }
+
+void hold_pos(float target_rad, unsigned long duration_ms) {
+  unsigned long t0 = millis();
+  while (millis() - t0 < duration_ms) {
+    float error = target_rad - get_linear_radians();
+    float voltage = K_p * error;
+    if (fabs(error) > POS_TOLERANCE)
+      voltage += (voltage > 0 ? STICTION : -STICTION);
+    voltage = constrain(voltage, -6.0f, 6.0f);
+    setMotorVoltage(voltage);
+    delay(1);
+  }
+}
+
 
 // ================== Control ISR ==================
 void interval_control_code(void) {

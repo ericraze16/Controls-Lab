@@ -43,7 +43,7 @@ void loop() {
 
 float get_motor_rad() {
   int motor_pos_raw = analogRead(MOT_PIN);
-  return constrain((SLOPE * motor_pos_raw) + OFFSET, -SATURATION_ANGLE, SATURATION_ANGLE);
+  return (SLOPE * motor_pos_raw) + OFFSET;
 }
 
 float get_linear_radians() {
@@ -52,6 +52,8 @@ float get_linear_radians() {
 }
 
 void hold_pos(float target_rad, unsigned long duration_ms) {
+  constrain(target_rad, -SATURATION_ANGLE, SATURATION_ANGLE);
+
   unsigned long t0 = millis();
   while (millis() - t0 < duration_ms) {
     float error = target_rad - get_linear_radians();

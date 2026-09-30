@@ -14,6 +14,7 @@ const float SLOPE = -0.000381880445;
 
 // System params
 const float SATURATION_VOLTAGE = 6.0f;  
+const float SATURATION_ANGLE = PI/4f;
 const float POS_TOLERANCE = 0.0005f; 
 const float STICTION = 0.3;
 float K_p = -15;
@@ -42,7 +43,7 @@ void loop() {
 
 float get_motor_rad() {
   int motor_pos_raw = analogRead(MOT_PIN);
-  return (SLOPE * motor_pos_raw) + OFFSET;
+  return constrain((SLOPE * motor_pos_raw) + OFFSET, -SATURATION_ANGLE, SATURATION_ANGLE);
 }
 
 float get_linear_radians() {

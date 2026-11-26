@@ -1,3 +1,8 @@
 MTE_484_F26_LAB_COURSE_OUTLINE.pdf
 MTE_484_F26_Lab_Manual.pdf
 
+__pycache__/
+.~lock.*
+lab_3/hostsim/sim
+lab_3/hostsim/sketch.cpp
+lab_3/hostsim/*.txt
